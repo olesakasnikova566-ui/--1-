@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Научный вызов — Своя игра</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: radial-gradient(circle at 20% 20%, #1a2a6c, #0b0f2b 60%, #000);
+    color: #fff;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2.2em;
+    margin-bottom: 6px;
+    background: linear-gradient(90deg, #00e5ff, #ff00e5, #ffe600);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 30px rgba(0,229,255,.3);
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #9fb3ff;
+    margin-bottom: 24px;
+    font-style: italic;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 1em;
+    font-weight: bold;
+    transition: transform .15s, box-shadow .15s;
+  }
+
+  button:hover { transform: translateY(-2px); }
+
+  .btn-main {
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(0,114,255,.4);
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(255,65,108,.4);
+  }
+
+  .btn-reset {
+    background: #2b3160;
+    color: #cfd8ff;
+  }
+
+  .btn-music {
+    background: linear-gradient(135deg, #8a2be2, #ff00e5);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(255,0,229,.4);
+  }
+
+  .btn-music.off {
+    background: #2b3160;
+    color: #9fb3ff;
+    box-shadow: none;
+  }
+
+  .teams {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+    margin-bottom: 26px;
+  }
+
+  .team {
+    background: rgba(255,255,255,.06);
+    border: 2px solid rgba(0,229,255,.35);
+    border-radius: 14px;
+    padding: 10px 16px;
+    min-width: 180px;
+    text-align: center;
+    backdrop-filter: blur(4px);
+    position: relative;
+  }
+
+  .team-name-input {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed rgba(0,229,255,.5);
+    border-radius: 6px;
+    color: #00e5ff;
+    font-weight: bold;
+    font-size: .95em;
+    text-align: center;
+    padding: 4px 6px;
+    margin-bottom: 6px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .2s, background .2s;
+  }
+
+  .team-name-input:focus {
+    border-color: #ffe600;
+    background: rgba(255,230,0,.08);
+  }
+
+  .team-name-input::placeholder {
+    color: rgba(0,229,255,.5);
+    font-style: italic;
+  }
+
+  .team-score {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #ffe600;
+  }
+
+  .team.active {
+    border-color: #ffe600;
+    box-shadow: 0 0 18px rgba(255,230,0,.5);
+  }
+
+  .team-remove {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #ff416c;
+    color: #fff;
+    border: 2px solid #0b0f2b;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+
+  .team:hover .team-remove { opacity: 1; }
+
+  .round-block {
+    max-width: 1000px;
+    margin: 0 auto 30px;
+  }
+
+  .round-title {
+    text-align: center;
+    background: linear-gradient(90deg, #3b1d6e, #5b2a9e);
+    color: #e0c8ff;
+    font-weight: bold;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    font-size: 1.05em;
+    letter-spacing: .5px;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .cell {
+    border-radius: 10px;
+    padding: 14px 8px;
+    text-align: center;
+    font-weight: bold;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cell.theme {
+    background: linear-gradient(160deg, #3b1d6e, #5b2a9e);
+    color: #e0c8ff;
+    cursor: default;
+    font-size: .92em;
+    min-height: 52px;
+  }
+
+  .cell.q {
+    background: linear-gradient(160deg, #0d1b4c, #16226b);
+    border: 1px solid rgba(0,229,255,.25);
+    cursor: pointer;
+    transition: background .2s, transform .15s;
+    font-size: 1.1em;
+    color: #00e5ff;
+  }
+
+  .cell.q:hover {
+    background: linear-gradient(160deg, #0072ff, #00c6ff);
+    transform: scale(1.04);
+    color: #fff;
+  }
+
+  .cell.q.used {
+    background: #1a1a2e;
+    color: #444;
+    cursor: default;
+    text-decoration: line-through;
+    transform: none;
+  }
+
+  .cell.q.kot {
+    background: linear-gradient(160deg, #8a2be2, #ff00e5);
+    color: #fff;
+    animation: pulse 1.6s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 5px rgba(255,0,229,.5); }
+    50% { box-shadow: 0 0 20px rgba(255,0,229,1); }
+  }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+    backdrop-filter: blur(6px);
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: linear-gradient(160deg, #101a44, #1c2a6e);
+    border: 2px solid #00e5ff;
+    border-radius: 20px;
+    max-width: 720px;
+    width: 100%;
+    padding: 30px;
+    box-shadow: 0 0 50px rgba(0,229,255,.4);
+    animation: pop .25s ease;
+  }
+
+  @keyframes pop {
+    from { transform: scale(.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .modal h2 {
+    color: #00e5ff;
+    margin-bottom: 14px;
+    font-size: 1.3em;
+  }
+
+  .modal .question {
+    font-size: 1.25em;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    color: #fff;
+  }
+
+  .modal .answer {
+    background: rgba(255,230,0,.12);
+    border-left: 4px solid #ffe600;
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: none;
+    font-size: 1.1em;
+    color: #ffe600;
+  }
+
+  .modal .answer.show { display: block; }
+
+  .modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .modal-actions button { padding: 10px 20px; font-size: 1em; }
+
+  .btn-reveal {
+    background: linear-gradient(135deg, #ffe600, #ffaa00);
+    color: #1a1a1a;
+    box-shadow: 0 4px 15px rgba(255,230,0,.4);
+  }
+
+  .btn-close {
+    background: #2b3160;
+    color: #cfd8ff;
+  }
+
+  .btn-award {
+    background: linear-gradient(135deg, #00c853, #00e676);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(0,200,83,.4);
+  }
+
+  .btn-penalty {
+    background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(255,65,108,.4);
+  }
+
+  .final-panel {
+    max-width: 1000px;
+    margin: 0 auto 30px;
+    background: rgba(255,255,255,.05);
+    border: 2px dashed rgba(255,230,0,.4);
+    border-radius: 16px;
+    padding: 20px;
+    display: none;
+  }
+
+  .final-panel.show { display: block; }
+
+  .final-panel h2 {
+    color: #ffe600;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .final-panel .question {
+    font-size: 1.15em;
+    line-height: 1.5;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+
+  .final-panel .answer {
+    background: rgba(255,230,0,.12);
+    border-left: 4px solid #ffe600;
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    display: none;
+    font-size: 1.1em;
+    color: #ffe600;
+  }
+
+  .final-panel .answer.show { display: block; }
+
+  .final-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .status {
+    text-align: center;
+    color: #9fb3ff;
+    margin-bottom: 14px;
+    font-size: .95em;
+  }
+
+  .hint {
+    text-align: center;
+    color: #6b7bb8;
+    font-size: .85em;
+    margin-top: 10px;
+  }
+
+  @media (max-width: 720px) {
+    .board { grid-template-columns: repeat(3, 1fr); gap: 5px; }
+    .cell { font-size: .85em; padding: 10px 4px; min-height: 50px; }
+    .cell.theme { font-size: .72em; min-height: 44px; }
+    .cell.q { font-size: .95em; }
+    h1 { font-size: 1.5em; }
+    .modal { padding: 20px; }
+    .modal .question { font-size: 1.05em; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🔬 Научный вызов</h1>
+<p class="subtitle">Своя игра о российских учёных и их открытиях</p>
+
+<div class="controls">
+  <button class="btn-main" id="addTeamBtn">➕ Добавить команду</button>
+  <button class="btn-main" id="nextTeamBtn">🔄 Следующая команда</button>
+  <button class="btn-danger" id="finalBtn">🏁 Показать финал</button>
+  <button class="btn-music" id="musicBtn">🎵 Музыка: вкл</button>
+  <button class="btn-reset" id="resetBtn">↺ Сбросить игру</button>
+</div>
+
+<div class="status" id="status">Активная команда: —</div>
+<div class="teams" id="teams"></div>
+
+<div id="boardContainer"></div>
+
+<div class="final-panel" id="finalPanel">
+  <h2>🏁 Финал: Битва за обложку</h2>
+  <p class="question" id="finalQuestion"></p>
+  <div class="answer" id="finalAnswer"></div>
+  <div class="final-actions">
+    <button class="btn-reveal" id="revealFinalBtn">Показать ответ</button>
+  </div>
+  <p class="hint">Команды делают ставки из накопленных баллов. Ведущий проверяет ответы вручную.</p>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle"></h2>
+    <p class="question" id="modalQuestion"></p>
+    <div class="answer" id="modalAnswer"></div>
+    <div class="modal-actions">
+      <button class="btn-reveal" id="revealBtn">Показать ответ</button>
+      <button class="btn-award" id="awardBtn">✅ Верно (+)</button>
+      <button class="btn-penalty" id="penaltyBtn">❌ Неверно (−)</button>
+      <button class="btn-close" id="closeBtn">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ ДАННЫЕ ИГРЫ ============ */
+
+const rounds = [
+  {
+    name: "Раунд 1: Разминка для нейронов",
+    themes: ["Транспорт", "Быт", "Изобретения"],
+    questions: [
+      [
+        { value: 10, q: "Этот крепостной механик из Урала в 1800 году построил «машину-самокат» с двумя железными колёсами.", a: "Ефим Артамонов" },
+        { value: 20, q: "Ипполит Романов в 1889 году создал первый русский… Что именно, если оно ездило на электричестве?", a: "Электромобиль" },
+        { value: 30, q: "Какой российский учёный в 1907 году придумал способ передавать изображение на расстояние, назвав это «электрическим телескопом»?", a: "Борис Розинг (телевизор)" }
+      ],
+      [
+        { value: 10, q: "Александр Ладыгин в 1874 году изобрёл то, что Томас Эдисон потом лишь немного доработал. Что это?", a: "Лампа накаливания" },
+        { value: 20, q: "Глеб Котельников в 1911 году придумал то, что спасает людей из падающих самолётов. Назовите предмет.", a: "Ранцевый парашют" },
+        { value: 30, q: "В 1985 году Алексей Пажитнов придумал игру, в которую до сих пор играет весь мир. Как она называлась?", a: "Тетрис" }
+      ],
+      [
+        { value: 10, q: "Этот русский изобретатель в 1895 году продемонстрировал первый в мире радиоприёмник. Назовите его фамилию.", a: "Александр Попов" },
+        { value: 20, q: "В 1876 году Павел Яблочков изобрёл «свечу», которая освещала улицы Парижа. Что это за устройство?", a: "Дуговая лампа (свеча Яблочкова)" },
+        { value: 30, q: "Этот русский инженер в 1834 году построил первый в мире паровоз на Урале. Назовите его фамилию.", a: "Ефим и Мирон Черепановы" }
+      ]
+    ]
+  },
+  {
+    name: "Раунд 2: Медицина и Химия",
+    themes: ["Медицина", "Химия", "Физиология"],
+    questions: [
+      [
+        { value: 40, q: "Николай Пирогов в 1847 году первым в мире применил это на поле боя, чтобы солдаты не чувствовали боли во время операции. Что это?", a: "Наркоз" },
+        { value: 50, q: "Этот русский учёный-физиолог стал первым российским Нобелевским лауреатом. Он изучал, как работает пищеварение у собак.", a: "Иван Павлов" },
+        { value: 60, q: "В 2020 году российские учёные быстро разработали то, что помогло остановить пандемию. Что именно?", a: "Вакцина от коронавируса (Спутник V)" }
+      ],
+      [
+        { value: 40, q: "Дмитрий Менделеев увидел свою знаменитую таблицу во сне. Но что именно он открыл? (Назовите закон).", a: "Периодический закон химических элементов" },
+        { value: 50, q: "Александр Бородин прославился не только как химик, но и как композитор. Какую известную оперу он написал?", a: "«Князь Игорь»" },
+        { value: 60, q: "Этот химик создал теорию химического строения, которая объясняет, почему вещества с одинаковым составом могут быть разными.", a: "Александр Бутлеров" }
+      ],
+      [
+        { value: 40, q: "Илья Мечников получил Нобелевскую премию за открытие этого процесса в организме. Что это за процесс?", a: "Фагоцитоз (клеточный иммунитет)" },
+        { value: 50, q: "Этот русский хирург первым в мире провёл операцию на сердце. Назовите его фамилию.", a: "Николай Амосов" },
+        { value: 60, q: "Владимир Бехтерев изучал мозг и создал науку о поведении. Как она называется?", a: "Рефлексология" }
+      ]
+    ]
+  },
+  {
+    name: "Раунд 3: Космос и Физика",
+    themes: ["Космос", "Физика", "Авиация"],
+    questions: [
+      [
+        { value: 70, q: "Константин Циолковский — «отец» ракетостроения. А кто создал первую ракету, которая вывела на орбиту первый спутник Земли?", a: "Сергей Королёв" },
+        { value: 80, q: "Этот учёный-физик считается «отцом» советской космонавтики и главным конструктором. Его имя долго держали в секрете.", a: "Сергей Королёв" },
+        { value: 90, q: "Жорес Алфёров получил Нобелевскую премию по физике. Без его открытий вряд ли существовал бы… Что это за глобальная сеть?", a: "Интернет" }
+      ],
+      [
+        { value: 70, q: "Идея первого вертолёта пришла Игорю Сикорскому, когда он наблюдал за… Кем или чем?", a: "За стрекозой" },
+        { value: 80, q: "Лев Ландау был гением и даже вывел «теорию счастья». Но главное — он создал теорию сверхтекучести. Какого газа?", a: "Жидкого гелия" },
+        { value: 90, q: "Николай Жуковский — «отец» русской авиации. Он изучал, как воздух обтекает крылья. Как называется эта наука?", a: "Аэродинамика" }
+      ],
+      [
+        { value: 70, q: "Этот космонавт первым в мире вышел в открытый космос в 1965 году. Назовите его фамилию.", a: "Алексей Леонов" },
+        { value: 80, q: "Валентина Терешкова — первая женщина в космосе. В каком году она совершила полёт?", a: "1963" },
+        { value: 90, q: "Этот российский физик создал первый в мире лазер. Назовите его фамилию.", a: "Александр Прохоров (совместно с Басовым)" }
+      ]
+    ]
+  },
+  {
+    name: "Раунд 4: Кот в мешке",
+    themes: ["Кот в мешке", "Кот в мешке", "Кот в мешке"],
+    questions: [
+      [
+        { value: 100, q: "Этот русский учёный был настолько гениален, что его не понимали даже лучшие математики того времени. Он создал геометрию, которая противоречила всем учебникам. Его называли «Коперником геометрии». Он почти ослеп к концу жизни, но продолжал диктовать свои труды студентам. Кто это?", a: "Николай Лобачевский", kot: true }
+      ],
+      [
+        { value: 100, q: "Этот учёный был не только химиком, но и страстным коллекционером... чего? Он покупал у гимназистов слова. У одного ученика он купил 50 санскритских слов, за 3 готских слова отдал 60 исландских. Этот лингвист был настолько очарован языками, что коллекционировал их как сокровища. Назовите его фамилию.", a: "Алексей Шахматов (лингвист)", kot: true }
+      ],
+      [
+        { value: 100, q: "Этот художник написал портрет двух молодых физиков по их просьбе — они хотели выглядеть как «будущие знаменитости». Портрет оказался пророческим: оба стали Нобелевскими лауреатами. Кто эти физики?", a: "Пётр Капица и Николай Семёнов", kot: true }
+      ]
+    ]
+  }
+];
+
+const finalQuestion = "Этот русский учёный был не только химиком, но и страстным коллекционером... чего? Он покупал у гимназистов слова. У одного ученика он купил 50 санскритских слов, за 3 готских слова отдал 60 исландских. Этот лингвист был настолько очарован языками, что коллекционировал их как сокровища. Назовите его фамилию.";
+const finalAnswer = "Алексей Шахматов (лингвист)";
+
+/* ============ СОСТОЯНИЕ ============ */
+
+let teams = [
+  { name: "Команда 1", score: 0 },
+  { name: "Команда 2", score: 0 }
+];
+let activeTeam = 0;
+let usedCells = new Set();
+let currentCell = null;
+
+/* ============ МУЗЫКА В СТИЛЕ «СВОЕЙ ИГРЫ» ============ */
+
+const musicBtn = document.getElementById("musicBtn");
+let audioCtx = null;
+let musicOn = true;
+let musicTimer = null;
+
+// Мелодия в духе заставки «Своей игры»:
+// узнаваемый ритм с синтезаторным тембром, повторяющийся мотив
+const melody = [
+  // [частота, длительность в долях]
+  [220, 0.5], [220, 0.5], [220, 0.5], [220, 0.5],   // низкий повтор
+  [277.18, 0.5], [277.18, 0.5], [277.18, 0.5], [277.18, 0.5],
+  [329.63, 0.5], [329.63, 0.5], [329.63, 0.5], [329.63, 0.5],
+  [220, 0.5], [220, 0.5], [220, 0.5], [220, 0.5],
+  [196, 0.5], [196, 0.5], [196, 0.5], [196, 0.5],
+  [246.94, 0.5], [246.94, 0.5], [246.94, 0.5], [246.94, 0.5],
+  [293.66, 0.5], [293.66, 0.5], [293.66, 0.5], [293.66, 0.5],
+  [220, 0.5], [220, 0.5], [220, 0.5], [220, 0.5]
+];
+
+// Басовая линия (как в оригинале — размеренный пульс)
+const bassLine = [
+  [110, 2], [110, 2], [110, 2], [110, 2],
+  [98, 2], [98, 2], [123.47, 2], [123.47, 2],
+  [110, 2], [110, 2], [110, 2], [110, 2]
+];
+
+function playNote(freq, duration, type, volume, when) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+
+  gain.gain.setValueAtTime(0.0001, when);
+  gain.gain.exponentialRampToValueAtTime(volume, when + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, when + duration);
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(when);
+  osc.stop(when + duration + 0.05);
+}
+
+function playMelodyLoop() {
+  if (!audioCtx || !musicOn) return;
+
+  const bpm = 140;
+  const beat = 60 / bpm;
+  const now = audioCtx.currentTime + 0.1;
+  let t = now;
+
+  // Мелодия — квадратная волна (характерный «синтезаторный» тембр)
+  melody.forEach(([freq, dur]) => {
+    playNote(freq, dur * beat * 0.9, "square", 0.04, t);
+    t += dur * beat;
+  });
+
+  // Бас — треугольная волна, тише
+  let bt = now;
+  bassLine.forEach(([freq, dur]) => {
+    playNote(freq, dur * beat * 0.8, "triangle", 0.05, bt);
+    bt += dur * beat;
+  });
+
+  const totalDuration = melody.reduce((sum, [, d]) => sum + d, 0) * beat;
+  musicTimer = setTimeout(playMelodyLoop, totalDuration * 1000);
+}
+
+function startMusic() {
+  if (audioCtx) {
+    audioCtx.resume();
+    return;
+  }
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  playMelodyLoop();
+}
+
+function stopMusic() {
+  if (musicTimer) {
+    clearTimeout(musicTimer);
+    musicTimer = null;
+  }
+  if (audioCtx) {
+    audioCtx.close();
+    audioCtx = null;
+  }
+}
+
+musicBtn.addEventListener("click", () => {
+  musicOn = !musicOn;
+  if (musicOn) {
+    startMusic();
+    musicBtn.textContent = "🎵 Музыка: вкл";
+    musicBtn.classList.remove("off");
+  } else {
+    stopMusic();
+    musicBtn.textContent = "🔇 Музыка: выкл";
+    musicBtn.classList.add("off");
+  }
+});
+
+// Автозапуск при первом клике (браузеры блокируют автозвук)
+document.addEventListener("click", function initMusic() {
+  if (musicOn && !audioCtx) startMusic();
+  document.removeEventListener("click", initMusic);
+}, { once: true });
+
+/* ============ РЕНДЕР КОМАНД ============ */
+
+function renderTeams() {
+  const container = document.getElementById("teams");
+  container.innerHTML = "";
+  teams.forEach((team, i) => {
+    const div = document.createElement("div");
+    div.className = "team" + (i === activeTeam ? " active" : "");
+
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "team-remove";
+    removeBtn.textContent = "×";
+    removeBtn.title = "Удалить команду";
+    removeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (teams.length <= 1) return alert("Должна остаться хотя бы одна команда");
+      teams.splice(i, 1);
+      if (activeTeam >= teams.length) activeTeam = 0;
+      renderTeams();
+    });
+
+    const input = document.createElement("input");
+    input.className = "team-name-input";
+    input.type = "text";
+    input.value = team.name;
+    input.placeholder = "Название команды";
+    input.maxLength = 30;
+    input.addEventListener("input", (e) => {
+      team.name = e.target.value || "Команда";
+      updateStatus();
+    });
+    input.addEventListener("click", (e) => e.stopPropagation());
+
+    const score = document.createElement("div");
+    score.className = "team-score";
+    score.textContent = team.score;
+
+    div.appendChild(removeBtn);
+    div.appendChild(input);
+    div.appendChild(score);
+
+    div.addEventListener("click", () => {
+      activeTeam = i;
+      renderTeams();
+    });
+
+    container.appendChild(div);
+  });
+  updateStatus();
+}
+
+function updateStatus() {
+  const el = document.getElementById("status");
+  if (teams.length === 0) {
+    el.textContent = "Добавьте хотя бы одну команду";
+  } else {
+    el.textContent = `Активная команда: ${teams[activeTeam].name} (${teams[activeTeam].score} баллов)`;
+  }
+}
+
+/* ============ РЕНДЕР ПОЛЯ: категории сверху ============ */
+
+function renderBoard() {
+  const container = document.getElementById("boardContainer");
+  container.innerHTML = "";
+
+  rounds.forEach((round, rIdx) => {
+    const block = document.createElement("div");
+    block.className = "round-block";
+
+    const title = document.createElement("div");
+    title.className = "round-title";
+    title.textContent = round.name;
+    block.appendChild(title);
+
+    const board = document.createElement("div");
+    board.className = "board";
+
+    round.themes.forEach(theme => {
+      const cell = document.createElement("div");
+      cell.className = "cell theme";
+      cell.textContent = theme;
+      board.appendChild(cell);
+    });
+
+    const maxRows = Math.max(...round.questions.map(col => col.length));
+    for (let row = 0; row < maxRows; row++) {
+      round.questions.forEach((col, cIdx) => {
+        const q = col[row];
+        if (!q) {
+          const empty = document.createElement("div");
+          empty.className = "cell theme";
+          empty.style.opacity = "0.15";
+          empty.textContent = "—";
+          board.appendChild(empty);
+          return;
+        }
+        const key = `${rIdx}-${cIdx}-${row}`;
+        const cell = document.createElement("div");
+        cell.className = "cell q" + (usedCells.has(key) ? " used" : "") + (q.kot ? " kot" : "");
+        cell.textContent = usedCells.has(key) ? "✓" : (q.kot ? "🐱 " + q.value : q.value);
+        cell.addEventListener("click", () => {
+          if (usedCells.has(key)) return;
+          openQuestion(rIdx, cIdx, row, key);
+        });
+        board.appendChild(cell);
+      });
+    }
+
+    block.appendChild(board);
+    container.appendChild(block);
+  });
+}
+
+/* ============ МОДАЛЬНОЕ ОКНО ============ */
+
+function openQuestion(rIdx, cIdx, row, key) {
+  const q = rounds[rIdx].questions[cIdx][row];
+  currentCell = { rIdx, cIdx, row, key, q };
+
+  document.getElementById("modalTitle").textContent =
+    (q.kot ? "🐱 Кот в мешке! " : "") + `${rounds[rIdx].themes[cIdx]} — ${q.value} баллов`;
+  document.getElementById("modalQuestion").textContent = q.q;
+  document.getElementById("modalAnswer").textContent = q.a;
+  document.getElementById("modalAnswer").classList.remove("show");
+  document.getElementById("revealBtn").style.display = "inline-block";
+  document.getElementById("awardBtn").style.display = "inline-block";
+  document.getElementById("penaltyBtn").style.display = "inline-block";
+  document.getElementById("closeBtn").style.display = "inline-block";
+
+  document.getElementById("modalOverlay").classList.add("show");
+}
+
+function closeModal() {
+  document.getElementById("modalOverlay").classList.remove("show");
+  currentCell = null;
+}
+
+function revealAnswer() {
+  document.getElementById("modalAnswer").classList.add("show");
+  document.getElementById("revealBtn").style.display = "none";
+}
+
+function awardPoints(isCorrect) {
+  if (!currentCell) return;
+  const { value } = currentCell.q;
+  const team = teams[activeTeam];
+
+  if (isCorrect) {
+    team.score += value;
+  } else {
+    if (currentCell.q.kot && teams.length > 1) {
+      const otherIndex = (activeTeam + 1) % teams.length;
+      teams[otherIndex].score += value;
+    } else {
+      team.score -= value;
+    }
+  }
+
+  usedCells.add(currentCell.key);
+  renderTeams();
+  renderBoard();
+  closeModal();
+}
+
+/* ============ ФИНАЛ ============ */
+
+function showFinal() {
+  document.getElementById("finalQuestion").textContent = finalQuestion;
+  document.getElementById("finalAnswer").textContent = finalAnswer;
+  document.getElementById("finalAnswer").classList.remove("show");
+  document.getElementById("revealFinalBtn").style.display = "inline-block";
+  document.getElementById("finalPanel").classList.add("show");
+  document.getElementById("finalPanel").scrollIntoView({ behavior: "smooth" });
+}
+
+/* ============ УПРАВЛЕНИЕ ============ */
+
+document.getElementById("addTeamBtn").addEventListener("click", () => {
+  if (teams.length >= 6) return alert("Максимум 6 команд");
+  teams.push({ name: `Команда ${teams.length + 1}`, score: 0 });
+  renderTeams();
+});
+
+document.getElementById("nextTeamBtn").addEventListener("click", () => {
+  if (teams.length === 0) return;
+  activeTeam = (activeTeam + 1) % teams.length;
+  renderTeams();
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (!confirm("Сбросить игру? Все баллы и открытые вопросы обнулятся.")) return;
+  teams.forEach(t => t.score = 0);
+  usedCells.clear();
+  activeTeam = 0;
+  document.getElementById("finalPanel").classList.remove("show");
+  renderTeams();
+  renderBoard();
+  closeModal();
+});
+
+document.getElementById("finalBtn").addEventListener("click", showFinal);
+document.getElementById("revealFinalBtn").addEventListener("click", () => {
+  document.getElementById("finalAnswer").classList.add("show");
+  document.getElementById("revealFinalBtn").style.display = "none";
+});
+
+document.getElementById("revealBtn").addEventListener("click", revealAnswer);
+document.getElementById("awardBtn").addEventListener("click", () => awardPoints(true));
+document.getElementById("penaltyBtn").addEventListener("click", () => awardPoints(false));
+document.getElementById("closeBtn").addEventListener("click", closeModal);
+
+document.getElementById("modalOverlay").addEventListener("click", (e) => {
+  if (e.target.id === "modalOverlay") closeModal();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeModal();
+});
+
+/* ============ СТАРТ ============ */
+
+renderTeams();
+renderBoard();
+</script>
+</body>
+</html>
